@@ -10,33 +10,43 @@ import PersonAddIcon from '@mui/icons-material/PersonAdd';
 
 function Home() {
   const [selectedTab, setSelectedTab] = useState(0);
-  const [saldoMoi, setSaldoMoi] = useState(0);
-  const [saldoJosemi, setSaldoJosemi] = useState(0);
   const [loading, setLoading] = useState(true);
   const [compañeros, setCompañeros] = useState([]);
+  const [saldos, setSaldos] = useState({});
   const [showGestionCompañeros, setShowGestionCompañeros] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await fetch('/api/viajes');
-        const { config } = await response.json();
-        setCompañeros(config.compañeros);
+        const { data, config } = await response.json();
+        if (config) {
+          setCompañeros(config);
+          // Inicializar saldos
+          const newSaldos = {};
+          config.forEach(comp => {
+            newSaldos[comp.id] = data?.[comp.id]?.saldo || 0;
+          });
+          setSaldos(newSaldos);
+        }
       } catch (error) {
-        console.error('Error al cargar compañeros:', error);
+        console.error('Error al cargar datos:', error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchData();
-
-    // Simular un tiempo mínimo de carga para evitar parpadeos
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
   }, []);
 
   const handleTabChange = (event, newValue) => {
     setSelectedTab(newValue);
+  };
+
+  const handleSaldoChange = (companeroId, nuevoSaldo) => {
+    setSaldos(prev => ({
+      ...prev,
+      [companeroId]: nuevoSaldo
+    }));
   };
 
   const handleAddCompañero = async (nombre) => {
@@ -52,19 +62,24 @@ function Home() {
         })
       });
       
-      const { success } = await response.json();
-      if (success) {
+      if (response.ok) {
         // Recargar datos
         const newResponse = await fetch('/api/viajes');
-        const { config } = await newResponse.json();
-        setCompañeros(config.compañeros);
+        const { data, config } = await newResponse.json();
+        setCompañeros(config);
+        // Actualizar saldos
+        const newSaldos = {};
+        config.forEach(comp => {
+          newSaldos[comp.id] = data?.[comp.id]?.saldo || 0;
+        });
+        setSaldos(newSaldos);
       }
     } catch (error) {
       console.error('Error al añadir compañero:', error);
     }
   };
 
-  const handleEditCompañero = async (id, nombre) => {
+  const handleEditCompañero = async (id, nuevoNombre) => {
     try {
       const response = await fetch('/api/viajes', {
         method: 'POST',
@@ -74,16 +89,21 @@ function Home() {
         body: JSON.stringify({
           action: 'editCompañero',
           id,
-          nombre
+          nuevoNombre
         })
       });
       
-      const { success } = await response.json();
-      if (success) {
+      if (response.ok) {
         // Recargar datos
         const newResponse = await fetch('/api/viajes');
-        const { config } = await newResponse.json();
-        setCompañeros(config.compañeros);
+        const { data, config } = await newResponse.json();
+        setCompañeros(config);
+        // Actualizar saldos
+        const newSaldos = {};
+        config.forEach(comp => {
+          newSaldos[comp.id] = data?.[comp.id]?.saldo || 0;
+        });
+        setSaldos(newSaldos);
       }
     } catch (error) {
       console.error('Error al editar compañero:', error);
@@ -103,14 +123,19 @@ function Home() {
         })
       });
       
-      const { success } = await response.json();
-      if (success) {
+      if (response.ok) {
         // Recargar datos
         const newResponse = await fetch('/api/viajes');
-        const { config } = await newResponse.json();
-        setCompañeros(config.compañeros);
+        const { data, config } = await newResponse.json();
+        setCompañeros(config);
+        // Actualizar saldos
+        const newSaldos = {};
+        config.forEach(comp => {
+          newSaldos[comp.id] = data?.[comp.id]?.saldo || 0;
+        });
+        setSaldos(newSaldos);
         // Si el compañero eliminado era el seleccionado, volver al primero
-        if (selectedTab >= config.compañeros.length) {
+        if (selectedTab >= config.length) {
           setSelectedTab(0);
         }
       }
@@ -210,8 +235,8 @@ function Home() {
             {selectedTab === index && (
               <CompaneroPanel 
                 nombre={compañero.id}
-                saldo={index === 0 ? saldoMoi : saldoJosemi}
-                onSaldoChange={index === 0 ? setSaldoMoi : setSaldoJosemi}
+                saldo={saldos[compañero.id] || 0}
+                onSaldoChange={(nuevoSaldo) => handleSaldoChange(compañero.id, nuevoSaldo)}
               />
             )}
           </Box>

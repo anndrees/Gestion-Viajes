@@ -55,10 +55,12 @@ export default function CompaneroPanel({ nombre, saldo, onSaldoChange }) {
       try {
         const response = await fetch('/api/viajes');
         const { data, config } = await response.json();
-        setViajes(data[nombre].viajes || {});
-        setPagos(data[nombre].pagos || []);
-        setCompañeros(config.compañeros || []);
-        onSaldoChange(data[nombre].saldo || 0);
+        if (data && data[nombre]) {
+          setViajes(data[nombre].viajes || {});
+          setPagos(data[nombre].pagos || []);
+          onSaldoChange(data[nombre].saldo || 0);
+        }
+        setCompañeros(config || []);
       } catch (error) {
         console.error('Error al cargar datos:', error);
         setSnackbar({
