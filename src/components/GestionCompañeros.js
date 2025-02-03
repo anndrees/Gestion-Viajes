@@ -17,7 +17,8 @@ import {
   Snackbar,
   Alert,
   CircularProgress,
-  Slide
+  Slide,
+  Typography
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
@@ -138,48 +139,97 @@ export default function GestionCompañeros({ open, onClose, compañeros, onAdd, 
 
   return (
     <>
-      <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-        <DialogTitle>
+      <Dialog 
+        open={open} 
+        onClose={onClose}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: '16px',
+            background: 'linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)',
+            boxShadow: '0 8px 32px 0 rgba(0,0,0,0.1)',
+          }
+        }}
+      >
+        <DialogTitle sx={{
+          background: 'linear-gradient(90deg, #1976d2 0%, #64b5f6 100%)',
+          color: 'white',
+          py: 2,
+          px: 3,
+          fontWeight: 700
+        }}>
           {editando ? 'Editar Compañero' : 'Gestionar Compañeros'}
         </DialogTitle>
-        <DialogContent>
-          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-            <TextField
-              fullWidth
-              label={editando ? 'Nuevo nombre' : 'Nombre del compañero'}
-              value={nuevoNombre}
-              onChange={(e) => setNuevoNombre(e.target.value)}
-              required
-              error={!!snackbar.message && snackbar.severity === 'error'}
-              helperText={snackbar.severity === 'error' ? snackbar.message : ''}
-              sx={{ mb: 2 }}
-            />
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <Button
-                type="submit"
-                variant="contained"
-                disabled={!nuevoNombre.trim() || saving}
-                startIcon={saving ? <CircularProgress size={20} /> : editando ? <EditIcon /> : <PersonAddIcon />}
+        <DialogContent sx={{ p: 3, mt: 2 }}>
+          {compañeros.length === 0 ? (
+            <Box 
+              sx={{ 
+                display: 'flex', 
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                py: 8,
+                px: 3,
+                background: 'linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)',
+                borderRadius: '12px',
+                border: '1px solid rgba(0,0,0,0.06)',
+              }}
+            >
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  color: '#637381',
+                  mb: 1,
+                  textAlign: 'center',
+                  fontWeight: 600
+                }}
               >
-                {editando ? 'Guardar cambios' : 'Añadir compañero'}
-              </Button>
-              {editando && (
-                <Button
-                  variant="outlined"
-                  onClick={handleCancel}
-                  disabled={saving}
-                >
-                  Cancelar
-                </Button>
-              )}
+                No hay compañeros registrados
+              </Typography>
+              <Typography 
+                variant="body1" 
+                sx={{ 
+                  color: '#637381',
+                  textAlign: 'center',
+                  opacity: 0.8
+                }}
+              >
+                Añade compañeros para empezar a compartir gastos
+              </Typography>
             </Box>
-          </Box>
-
-          <List sx={{ mt: 3 }}>
-            {compañeros.map((compañero) => (
-              <ListItem
-                key={compañero.id}
-                secondaryAction={
+          ) : (
+            <List sx={{ py: 0 }}>
+              {compañeros.map((compañero) => (
+                <ListItem
+                  key={compañero.id}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    mb: 2,
+                    background: 'linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(0,0,0,0.06)',
+                    p: 2,
+                    transition: 'all 0.2s ease-in-out',
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 4px 12px 0 rgba(0,0,0,0.1)'
+                    }
+                  }}
+                >
+                  <ListItemAvatar>
+                    <Avatar 
+                      src={getRobohashUrl(compañero.nombre)}
+                      alt={compañero.nombre}
+                    >
+                      <PersonIcon />
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText 
+                    primary={compañero.nombre}
+                    secondary={editando?.id === compañero.id ? 'Editando...' : null}
+                  />
                   <Box sx={{ display: 'flex', gap: 1 }}>
                     <IconButton
                       edge="end"
@@ -198,59 +248,146 @@ export default function GestionCompañeros({ open, onClose, compañeros, onAdd, 
                       <DeleteIcon />
                     </IconButton>
                   </Box>
+                </ListItem>
+              ))}
+            </List>
+          )}
+
+          <Box sx={{ mt: 3 }}>
+            <TextField
+              fullWidth
+              label={editando ? 'Nuevo nombre' : 'Nombre del compañero'}
+              value={nuevoNombre}
+              onChange={(e) => setNuevoNombre(e.target.value)}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '12px',
+                  transition: 'all 0.2s ease-in-out',
+                  '&:hover': {
+                    backgroundColor: 'rgba(25,118,210,0.04)'
+                  },
+                  '&.Mui-focused': {
+                    boxShadow: '0 0 0 2px rgba(25,118,210,0.2)'
+                  }
                 }
+              }}
+            />
+            <Button
+              onClick={handleSubmit}
+              variant="contained"
+              fullWidth
+              disabled={!nuevoNombre.trim() || saving}
+              sx={{
+                mt: 2,
+                borderRadius: '12px',
+                textTransform: 'none',
+                py: 1,
+                background: 'linear-gradient(90deg, #1976d2 0%, #64b5f6 100%)',
+                transition: 'all 0.3s ease-in-out',
+                '&:hover': {
+                  background: 'linear-gradient(90deg, #1565c0 0%, #42a5f5 100%)',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                }
+              }}
+            >
+              {editando ? 'Guardar cambios' : 'Añadir compañero'}
+            </Button>
+            {editando && (
+              <Button
+                variant="outlined"
+                onClick={handleCancel}
+                disabled={saving}
+                sx={{
+                  mt: 2,
+                  borderRadius: '8px',
+                  textTransform: 'none',
+                  px: 3,
+                  borderColor: 'rgba(25,118,210,0.5)',
+                  '&:hover': {
+                    borderColor: '#1976d2',
+                    backgroundColor: 'rgba(25,118,210,0.08)'
+                  }
+                }}
               >
-                <ListItemAvatar>
-                  <Avatar 
-                    src={getRobohashUrl(compañero.nombre)}
-                    alt={compañero.nombre}
-                  >
-                    <PersonIcon />
-                  </Avatar>
-                </ListItemAvatar>
-                <ListItemText 
-                  primary={compañero.nombre}
-                  secondary={editando?.id === compañero.id ? 'Editando...' : null}
-                />
-              </ListItem>
-            ))}
-          </List>
+                Cancelar
+              </Button>
+            )}
+          </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={onClose}>Cerrar</Button>
+        <DialogActions sx={{ p: 3, pt: 0 }}>
+          <Button 
+            onClick={onClose}
+            variant="outlined"
+            sx={{
+              borderRadius: '8px',
+              textTransform: 'none',
+              px: 3,
+              borderColor: 'rgba(25,118,210,0.5)',
+              '&:hover': {
+                borderColor: '#1976d2',
+                backgroundColor: 'rgba(25,118,210,0.08)'
+              }
+            }}
+          >
+            Cerrar
+          </Button>
         </DialogActions>
       </Dialog>
 
-      <Dialog
-        open={deleteDialog.open}
+      <Dialog 
+        open={deleteDialog.open} 
         onClose={() => setDeleteDialog({ open: false, compañero: null })}
         TransitionComponent={Slide}
         TransitionProps={{ direction: "up" }}
+        PaperProps={{
+          sx: {
+            borderRadius: '16px',
+            background: 'linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)',
+            boxShadow: '0 8px 32px 0 rgba(0,0,0,0.1)',
+          }
+        }}
       >
-        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <WarningIcon color="warning" />
+        <DialogTitle sx={{
+          background: 'linear-gradient(90deg, #ef5350 0%, #ff1744 100%)',
+          color: 'white',
+          py: 2,
+          px: 3,
+          fontWeight: 700
+        }}>
           Confirmar eliminación
         </DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            ¿Estás seguro de que quieres eliminar a <strong>{deleteDialog.compañero?.nombre}</strong>?
+        <DialogContent sx={{ p: 3, mt: 2 }}>
+          <DialogContentText sx={{ color: '#637381' }}>
+            ¿Estás seguro de que quieres eliminar a {deleteDialog.compañero?.nombre}?
             <br />
             Esta acción no se puede deshacer y se perderán todos los datos asociados.
           </DialogContentText>
         </DialogContent>
-        <DialogActions sx={{ p: 2, gap: 1 }}>
-          <Button
+        <DialogActions sx={{ p: 3, pt: 1 }}>
+          <Button 
             onClick={() => setDeleteDialog({ open: false, compañero: null })}
-            variant="outlined"
+            sx={{
+              borderRadius: '8px',
+              textTransform: 'none',
+              px: 3
+            }}
           >
             Cancelar
           </Button>
-          <Button
+          <Button 
             onClick={confirmDelete}
-            variant="contained"
             color="error"
-            startIcon={saving ? <CircularProgress size={20} /> : <DeleteIcon />}
-            disabled={saving}
+            variant="contained"
+            sx={{
+              borderRadius: '8px',
+              textTransform: 'none',
+              px: 3,
+              background: 'linear-gradient(90deg, #ef5350 0%, #ff1744 100%)',
+              '&:hover': {
+                background: 'linear-gradient(90deg, #d32f2f 0%, #d50000 100%)'
+              }
+            }}
           >
             Eliminar
           </Button>

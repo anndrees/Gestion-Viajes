@@ -337,84 +337,144 @@ export default function CompaneroPanel({ nombre, saldo, onSaldoChange }) {
     <Box>
       <Grid container spacing={3}>
         <Grid item xs={12} md={8}>
-          <Paper sx={{ p: 3 }}>
-            <Box sx={{ mb: 3 }}>
+          <Paper 
+            elevation={2}
+            sx={{ 
+              p: 3, 
+              mb: 3,
+              background: 'linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)',
+              borderRadius: '16px',
+              boxShadow: '0 4px 20px 0 rgba(0,0,0,0.05)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              position: 'relative',
+              overflow: 'hidden'
+            }}
+          >
+            <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 3 }}>
               <DatePicker
-                label="Seleccionar semana"
+                label="Semana"
                 value={selectedDate}
                 onChange={setSelectedDate}
-                format="'Semana del' d 'de' MMMM"
-                sx={{ width: '100%' }}
+                format="dd/MM/yyyy"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '12px',
+                    transition: 'all 0.2s ease-in-out',
+                    '&:hover': {
+                      backgroundColor: 'rgba(25,118,210,0.04)'
+                    },
+                    '&.Mui-focused': {
+                      boxShadow: '0 0 0 2px rgba(25,118,210,0.2)'
+                    }
+                  }
+                }}
               />
-            </Box>
+            </Stack>
 
-            <Typography variant="subtitle1" gutterBottom>
-              Viajes de la semana
-            </Typography>
-
-            {diasSemana.map((dia) => {
-              const fechaStr = format(dia, 'yyyy-MM-dd');
+            {diasSemana.map((fecha) => {
+              const fechaStr = format(fecha, 'yyyy-MM-dd');
               const viajesDia = viajes[fechaStr] || {};
-
               return (
-                <Paper 
-                  key={fechaStr} 
+                <Paper
+                  key={fechaStr}
+                  elevation={1}
+                  onClick={() => {
+                    const shouldActivate = !viajesDia.ida && !viajesDia.vuelta;
+                    handleViajeChange(fecha, 'ida', shouldActivate, true);
+                  }}
                   sx={{ 
                     p: 2, 
                     mb: 2,
-                    backgroundColor: '#f8f9fa'
+                    borderRadius: '12px',
+                    background: 'linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)',
+                    border: '1px solid rgba(0,0,0,0.06)',
+                    transition: 'all 0.2s ease-in-out',
+                    cursor: 'pointer',
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 4px 12px 0 rgba(0,0,0,0.1)',
+                      backgroundColor: 'rgba(25,118,210,0.04)'
+                    },
+                    ...(viajesDia.ida && viajesDia.vuelta ? {
+                      background: 'linear-gradient(145deg, rgba(25,118,210,0.08) 0%, rgba(25,118,210,0.04) 100%)',
+                      border: '1px solid rgba(25,118,210,0.1)'
+                    } : {})
                   }}
                 >
-                  <Typography variant="subtitle1">
-                    {format(dia, "EEEE d 'de' MMMM", { locale: es })}
-                  </Typography>
-                  <Stack direction="row" spacing={2} mt={1}>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={!!viajesDia.ida}
-                          onChange={() => handleViajeChange(dia, 'ida')}
-                          icon={<DirectionsCarIcon />}
-                          checkedIcon={<DirectionsCarIcon />}
-                        />
-                      }
-                      label="Ida"
-                    />
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={!!viajesDia.vuelta}
-                          onChange={() => handleViajeChange(dia, 'vuelta')}
-                          icon={<DirectionsCarIcon />}
-                          checkedIcon={<DirectionsCarIcon />}
-                        />
-                      }
-                      label="Vuelta"
-                    />
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={() => {
-                        const newValue = !viajesDia.ida && !viajesDia.vuelta;
-                        handleViajeChange(dia, 'ida', newValue, true);
-                      }}
-                      startIcon={<DirectionsCarIcon />}
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Typography 
                       sx={{ 
-                        display: { 
-                          xs: 'none', 
-                          sm: 'flex'  
-                        }
+                        minWidth: 100,
+                        fontWeight: 600,
+                        color: '#637381'
                       }}
                     >
-                      {(!viajesDia.ida && !viajesDia.vuelta) ? "Ida y vuelta" : "Ninguno"}
-                    </Button>
-                    {(viajesDia.ida || viajesDia.vuelta) && (
-                      <Chip 
-                        label={`${((viajesDia.ida ? 1.5 : 0) + (viajesDia.vuelta ? 1.5 : 0)).toFixed(2)}€`}
-                        color="primary"
-                        variant="outlined"
-                      />
-                    )}
+                      {format(fecha, "EEEE d", { locale: es })}
+                    </Typography>
+                    <Stack 
+                      direction={{ xs: 'column', sm: 'row' }} 
+                      spacing={2} 
+                      alignItems="center" 
+                      justifyContent="space-between"
+                      sx={{ 
+                        flexGrow: 1,
+                        width: '100%'
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Box sx={{ 
+                        display: 'flex', 
+                        gap: 2,
+                        flexGrow: 1,
+                        justifyContent: { xs: 'center', sm: 'flex-start' }
+                      }}>
+                        <Button
+                          variant={viajesDia.ida ? "contained" : "outlined"}
+                          onClick={() => handleViajeChange(fecha, 'ida')}
+                          startIcon={<DirectionsCarIcon />}
+                          sx={{ 
+                            borderRadius: '10px',
+                            textTransform: 'none',
+                            minWidth: '120px',
+                            background: viajesDia.ida ? 'linear-gradient(90deg, #1976d2 0%, #64b5f6 100%)' : 'transparent',
+                            '&:hover': {
+                              background: viajesDia.ida ? 'linear-gradient(90deg, #1565c0 0%, #42a5f5 100%)' : 'rgba(25,118,210,0.08)'
+                            }
+                          }}
+                        >
+                          Ida
+                        </Button>
+                        <Button
+                          variant={viajesDia.vuelta ? "contained" : "outlined"}
+                          onClick={() => handleViajeChange(fecha, 'vuelta')}
+                          startIcon={<DirectionsCarIcon />}
+                          sx={{ 
+                            borderRadius: '10px',
+                            textTransform: 'none',
+                            minWidth: '120px',
+                            background: viajesDia.vuelta ? 'linear-gradient(90deg, #1976d2 0%, #64b5f6 100%)' : 'transparent',
+                            '&:hover': {
+                              background: viajesDia.vuelta ? 'linear-gradient(90deg, #1565c0 0%, #42a5f5 100%)' : 'rgba(25,118,210,0.08)'
+                            }
+                          }}
+                        >
+                          Vuelta
+                        </Button>
+                      </Box>
+                      {(viajesDia.ida || viajesDia.vuelta) && (
+                        <Chip 
+                          label={`${((viajesDia.ida ? 1.5 : 0) + (viajesDia.vuelta ? 1.5 : 0)).toFixed(2)}€`}
+                          color="primary"
+                          sx={{
+                            borderRadius: '8px',
+                            background: 'linear-gradient(90deg, #1976d2 0%, #64b5f6 100%)',
+                            color: 'white',
+                            fontWeight: 600,
+                            minWidth: '80px'
+                          }}
+                        />
+                      )}
+                    </Stack>
                   </Stack>
                 </Paper>
               );
@@ -424,35 +484,76 @@ export default function CompaneroPanel({ nombre, saldo, onSaldoChange }) {
 
         <Grid item xs={12} md={4}>
           <Paper 
+            elevation={2}
             sx={{ 
               p: 3, 
               mb: 3,
-              backgroundColor: totalDeuda < 0 ? '#ffebee' : '#e8f5e9',
-              transition: 'background-color 0.3s ease'
+              background: totalDeuda < 0 
+                ? 'linear-gradient(145deg, #ffffff 0%, #ffebee 100%)'
+                : 'linear-gradient(145deg, #ffffff 0%, #e8f5e9 100%)',
+              borderRadius: '16px',
+              boxShadow: '0 4px 20px 0 rgba(0,0,0,0.05)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              transition: 'all 0.3s ease'
             }}
           >
             <Stack direction="row" spacing={2} alignItems="center">
-              <AccountBalanceWalletIcon color={totalDeuda < 0 ? "error" : "success"} />
+              <Box
+                sx={{
+                  p: 1,
+                  borderRadius: '12px',
+                  background: totalDeuda < 0 
+                    ? 'linear-gradient(145deg, #ef5350 0%, #ff1744 100%)'
+                    : 'linear-gradient(145deg, #4caf50 0%, #00c853 100%)',
+                  color: 'white'
+                }}
+              >
+                <AccountBalanceWalletIcon />
+              </Box>
               <Box>
-                <Typography variant="h6" gutterBottom>
+                <Typography 
+                  variant="h6" 
+                  gutterBottom
+                  sx={{
+                    fontWeight: 700,
+                    color: '#2b3445'
+                  }}
+                >
                   Saldo actual: {saldo.toFixed(2)}€
                 </Typography>
                 <Typography 
                   variant="subtitle1" 
                   sx={{ 
-                    color: totalDeuda < 0 ? 'error.main' : 'success.main',
-                    fontWeight: 'bold'
+                    color: totalDeuda < 0 ? '#d32f2f' : '#2e7d32',
+                    fontWeight: 600
                   }}
                 >
-                  {totalDeuda < 0 ? "Debes: " : "Deuda actual: "}
+                  {totalDeuda < 0 ? "Debes: " : "A favor: "}
                   {Math.abs(totalDeuda).toFixed(2)}€
                 </Typography>
               </Box>
             </Stack>
           </Paper>
 
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
+          <Paper 
+            elevation={2}
+            sx={{ 
+              p: 3,
+              background: 'linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)',
+              borderRadius: '16px',
+              boxShadow: '0 4px 20px 0 rgba(0,0,0,0.05)',
+              border: '1px solid rgba(255,255,255,0.2)'
+            }}
+          >
+            <Typography 
+              variant="h6" 
+              gutterBottom
+              sx={{
+                fontWeight: 700,
+                color: '#2b3445',
+                mb: 2
+              }}
+            >
               Registrar nuevo pago
             </Typography>
             <Stack spacing={2}>
@@ -462,8 +563,29 @@ export default function CompaneroPanel({ nombre, saldo, onSaldoChange }) {
                 value={nuevoPago}
                 onChange={(e) => setNuevoPago(e.target.value)}
                 InputProps={{
-                  startAdornment: <PaymentsIcon sx={{ mr: 1, color: 'text.secondary' }} />,
+                  startAdornment: (
+                    <Box
+                      sx={{
+                        mr: 1,
+                        color: '#637381'
+                      }}
+                    >
+                      <PaymentsIcon />
+                    </Box>
+                  ),
                   endAdornment: '€'
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '12px',
+                    transition: 'all 0.2s ease-in-out',
+                    '&:hover': {
+                      backgroundColor: 'rgba(25,118,210,0.04)'
+                    },
+                    '&.Mui-focused': {
+                      boxShadow: '0 0 0 2px rgba(25,118,210,0.2)'
+                    }
+                  }
                 }}
               />
               <Button
@@ -471,22 +593,45 @@ export default function CompaneroPanel({ nombre, saldo, onSaldoChange }) {
                 onClick={handleNuevoPago}
                 disabled={!nuevoPago || isNaN(parseFloat(nuevoPago))}
                 startIcon={<PaymentsIcon />}
+                sx={{
+                  borderRadius: '12px',
+                  textTransform: 'none',
+                  py: 1.5,
+                  background: 'linear-gradient(90deg, #1976d2 0%, #64b5f6 100%)',
+                  '&:hover': {
+                    background: 'linear-gradient(90deg, #1565c0 0%, #42a5f5 100%)'
+                  },
+                  '&.Mui-disabled': {
+                    background: '#e0e0e0'
+                  }
+                }}
               >
                 Registrar pago
               </Button>
             </Stack>
           </Paper>
 
-          <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
-            <Fab
-              color="primary"
-              variant="extended"
+          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
+            <Button
+              variant="contained"
               onClick={() => setShowPagos(true)}
-              sx={{ gap: 1 }}
+              startIcon={<HistoryIcon />}
+              sx={{
+                borderRadius: '12px',
+                textTransform: 'none',
+                py: 1.5,
+                px: 3,
+                background: 'linear-gradient(90deg, #1976d2 0%, #64b5f6 100%)',
+                boxShadow: '0 4px 12px 0 rgba(0,0,0,0.1)',
+                '&:hover': {
+                  background: 'linear-gradient(90deg, #1565c0 0%, #42a5f5 100%)',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 6px 16px 0 rgba(0,0,0,0.15)'
+                }
+              }}
             >
-              <HistoryIcon />
               Ver historial de pagos
-            </Fab>
+            </Button>
           </Box>
         </Grid>
       </Grid>
@@ -508,7 +653,14 @@ export default function CompaneroPanel({ nombre, saldo, onSaldoChange }) {
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity}>
+        <Alert 
+          onClose={handleCloseSnackbar} 
+          severity={snackbar.severity}
+          sx={{
+            borderRadius: '12px',
+            boxShadow: '0 4px 12px 0 rgba(0,0,0,0.1)'
+          }}
+        >
           {snackbar.message}
         </Alert>
       </Snackbar>
@@ -519,12 +671,22 @@ export default function CompaneroPanel({ nombre, saldo, onSaldoChange }) {
           zIndex: (theme) => theme.zIndex.drawer + 1,
           display: 'flex',
           flexDirection: 'column',
-          gap: 2
+          gap: 2,
+          backdropFilter: 'blur(4px)'
         }}
         open={saving}
       >
-        <CircularProgress color="inherit" />
-        <Typography>
+        <CircularProgress 
+          color="inherit" 
+          size={60}
+          thickness={4}
+        />
+        <Typography
+          sx={{
+            fontWeight: 600,
+            textShadow: '0 2px 4px rgba(0,0,0,0.2)'
+          }}
+        >
           Guardando cambios...
         </Typography>
       </Backdrop>
