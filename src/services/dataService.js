@@ -1,37 +1,33 @@
-import fs from 'fs-extra';
-import path from 'path';
-import { v4 as uuidv4 } from 'uuid';
+import { supabase } from '../lib/supabase'
 
-const DATA_FILE = path.join(process.cwd(), 'src', 'data', 'viajes.json');
-const CONFIG_FILE = path.join(process.cwd(), 'src', 'data', 'config.json');
+const DATA_FILE = 'viajes';
+const CONFIG_FILE = 'config';
 
 // Asegurarse de que los archivos existen
 async function ensureFiles() {
-  const exists = await fs.pathExists(DATA_FILE);
-  if (!exists) {
-    const initialData = {
-      MOI: { viajes: {}, pagos: [], saldo: 0 },
-      JOSEMI: { viajes: {}, pagos: [], saldo: 0 }
-    };
-    await fs.outputJson(DATA_FILE, initialData, { spaces: 2 });
-  }
-
-  const configExists = await fs.pathExists(CONFIG_FILE);
-  if (!configExists) {
-    const initialConfig = {
-      compañeros: [
-        { id: 'MOI', nombre: 'MOI' },
-        { id: 'JOSEMI', nombre: 'JOSEMI' }
-      ]
-    };
-    await fs.outputJson(CONFIG_FILE, initialConfig, { spaces: 2 });
-  }
+  // No es necesario verificar la existencia de archivos con Supabase
 }
 
 export async function getData() {
   try {
     await ensureFiles();
-    return await fs.readJson(DATA_FILE);
+    const { data, error } = await supabase
+      .from('companions')
+      .select('*')
+      .order('nombre')
+    
+    if (error) throw error
+    
+    const companions = {}
+    data.forEach(companion => {
+      companions[companion.id] = {
+        viajes: {},
+        pagos: [],
+        saldo: 0
+      }
+    })
+    
+    return companions;
   } catch (error) {
     console.error('Error al leer los datos:', error);
     return {
@@ -44,7 +40,16 @@ export async function getData() {
 export async function getConfig() {
   try {
     await ensureFiles();
-    return await fs.readJson(CONFIG_FILE);
+    const { data, error } = await supabase
+      .from('companions')
+      .select('*')
+      .order('nombre')
+    
+    if (error) throw error
+    
+    return {
+      compañeros: data.map(companion => ({ id: companion.id, nombre: companion.nombre }))
+    };
   } catch (error) {
     console.error('Error al leer la configuración:', error);
     return {
@@ -58,7 +63,7 @@ export async function getConfig() {
 
 export async function saveData(data) {
   try {
-    await fs.outputJson(DATA_FILE, data, { spaces: 2 });
+    // No es necesario guardar datos con Supabase
     return true;
   } catch (error) {
     console.error('Error al guardar los datos:', error);
@@ -68,7 +73,7 @@ export async function saveData(data) {
 
 export async function saveConfig(config) {
   try {
-    await fs.outputJson(CONFIG_FILE, config, { spaces: 2 });
+    // No es necesario guardar configuración con Supabase
     return true;
   } catch (error) {
     console.error('Error al guardar la configuración:', error);
@@ -188,4 +193,132 @@ export async function transferirPago(nombreOrigen, nombreDestino, pagoId) {
     return saveData(data);
   }
   return false;
+}
+
+export async function getCompaneros() {
+  const { data, error } = await supabase
+    .from('companions')
+    .select('*')
+    .order('nombre')
+  
+  if (error) throw error
+  return data
+}
+
+export async function addCompanero(id, nombre) {
+  const { data, error } = await supabase
+    .from('companions')
+    .insert([{ id, nombre }])
+    .select()
+  
+  if (error) throw error
+  return data[0]
+}
+
+export async function deleteCompanero(id) {
+  const { error } = await supabase
+    .from('companions')
+    .delete()
+    .eq('id', id)
+  
+  if (error) throw error
+}
+
+export async function getViajes(companeroId) {
+  const { data: trips, error: tripsError } = await supabase
+    .from('trips')
+    .select('*')
+    .eq('companion_id', companeroId)
+  
+  if (tripsError) throw tripsError
+
+  const { data: payments, error: paymentsError } = await supabase
+    .from('payments')
+    .select('*')
+    .eq('companion_id', companeroId)
+  
+  if (paymentsError) throw paymentsError
+
+  // Convertir los viajes a formato actual
+  const viajes = {}
+  trips.forEach(trip => {
+    viajes[trip.fecha] = {
+      ida: trip.ida,
+      vuelta: trip.vuelta
+    }
+  })
+
+  // Calcular saldo total
+  const saldo = payments.reduce((acc, payment) => acc + Number(payment.cantidad), 0)
+
+  return {
+    viajes,
+    pagos: payments,
+    saldo
+  }
+}
+
+export async function updateViajes(companeroId, fecha, ida, vuelta) {
+  // Primero intentamos actualizar
+  const { data, error } = await supabase
+    .from('trips')
+    .update({ ida, vuelta })
+    .eq('companion_id', companeroId)
+    .eq('fecha', fecha)
+    .select()
+
+  if (error) throw error
+
+  // Si no existe, lo creamos
+  if (data.length === 0) {
+    const { error: insertError } = await supabase
+      .from('trips')
+      .insert([{ companion_id: companeroId, fecha, ida, vuelta }])
+    
+    if (insertError) throw insertError
+  }
+}
+
+export async function addPago(companeroId, cantidad, fecha, nota = '') {
+  const { data, error } = await supabase
+    .from('payments')
+    .insert([{
+      companion_id: companeroId,
+      cantidad,
+      fecha,
+      nota
+    }])
+    .select()
+  
+  if (error) throw error
+  return data[0]
+}
+
+export async function updatePago(id, { cantidad, fecha, nota }) {
+  const { data, error } = await supabase
+    .from('payments')
+    .update({ cantidad, fecha, nota })
+    .eq('id', id)
+    .select()
+  
+  if (error) throw error
+  return data[0]
+}
+
+export async function deletePago(id) {
+  const { error } = await supabase
+    .from('payments')
+    .delete()
+    .eq('id', id)
+  
+  if (error) throw error
+}
+
+export async function transferirPago(pagoId, nuevoCompaneroId) {
+  const { error } = await supabase
+    .from('payments')
+    .update({ companion_id: nuevoCompaneroId })
+    .eq('id', pagoId)
+  
+  if (error) throw error
 }

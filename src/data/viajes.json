@@ -2,15 +2,20 @@
   "MOI": {
     "pagos": [
       {
-        "id": "1",
-        "cantidad": 2,
-        "fecha": "2025-02-02T21:56:26.000Z",
-        "nota": "Pago inicial"
+        "id": "4a02a820-8512-4785-b65b-4b899479eb71",
+        "cantidad": 20,
+        "fecha": "2025-02-03T00:45:50.771Z",
+        "nota": ""
       }
     ],
-    "saldo": 2
+    "saldo": 20
   },
   "JOSEMI": {
+    "viajes": {},
+    "pagos": [],
+    "saldo": 0
+  },
+  "A": {
     "viajes": {},
     "pagos": [],
     "saldo": 0
